@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  SALES
+  WAREHOUSE
+  ACCOUNTS
+}
+
+enum CustomerType {
+  RETAIL
+  WHOLESALE
+  DISTRIBUTOR
+}
+
+enum CustomerStatus {
+  LEAD
+  ACTIVE
+  INACTIVE
+}
+
+enum MovementType {
+  IN
+  OUT
+}
+
+enum ChallanStatus {
+  DRAFT
+  CONFIRMED
+  CANCELLED
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role
+  createdAt DateTime @default(now())
+
+  challans        Challan[]       @relation("ChallanCreatedBy")
+  stockMovements  StockMovement[] @relation("MovementCreatedBy")
+  followUps       FollowUp[]      @relation("FollowUpCreatedBy")
+}
+
+model Customer {
+  id           String         @id @default(uuid())
+  name         String
+  mobile       String
+  email        String?
+  businessName String?
+  gstNumber    String?
+  customerType CustomerType
+  address      String?
+  status       CustomerStatus @default(LEAD)
+  followUpDate DateTime?
+  notes        String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  challans  Challan[]
+  followUps FollowUp[]
+
+  @@index([name])
+  @@index([mobile])
+}
+
+model FollowUp {
+  id         String   @id @default(uuid())
+  customer   Customer @relation(fields: [customerId], references: [id])
+  customerId String
+  note       String
+  createdBy  User     @relation("FollowUpCreatedBy", fields: [createdById], references: [id])
+  createdById String
+  createdAt  DateTime @default(now())
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  name        String
+  sku         String   @unique
+  category    String?
+  unitPrice   Decimal  @db.Decimal(12, 2)
+  stock       Int      @default(0)
+  minStock    Int      @default(0)
+  location    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  stockMovements StockMovement[]
+  challanItems   ChallanItem[]
+
+  @@index([name])
+  @@index([sku])
+}
+
+model StockMovement {
+  id            String       @id @default(uuid())
+  product       Product      @relation(fields: [productId], references: [id])
+  productId     String
+  quantity      Int
+  movementType  MovementType
+  reason        String
+  createdBy     User         @relation("MovementCreatedBy", fields: [createdById], references: [id])
+  createdById   String
+  createdAt     DateTime     @default(now())
+}
+
+model Challan {
+  id            String        @id @default(uuid())
+  challanNumber String        @unique
+  customer      Customer      @relation(fields: [customerId], references: [id])
+  customerId    String
+  totalQuantity Int           @default(0)
+  status        ChallanStatus @default(DRAFT)
+  createdBy     User          @relation("ChallanCreatedBy", fields: [createdById], references: [id])
+  createdById   String
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  items ChallanItem[]
+}
+
+model ChallanItem {
+  id         String  @id @default(uuid())
+  challan    Challan @relation(fields: [challanId], references: [id])
+  challanId  String
+
+  // Live FK kept for convenience, but snapshot fields below are the source of truth
+  product    Product @relation(fields: [productId], references: [id])
+  productId  String
+
+  // Snapshot data captured at time of adding to challan (per assignment requirement)
+  productNameSnapshot String
+  skuSnapshot         String
+  unitPriceSnapshot   Decimal @db.Decimal(12, 2)
+
+  quantity   Int
+}
