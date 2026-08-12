@@ -6,9 +6,9 @@ stock-reduction business logic.
 
 ## Tech Stack
 
-- **Backend:** Node.js, TypeScript, Express, Prisma ORM, PostgreSQL, JWT auth, Zod validation
-- **Frontend:** React, TypeScript, Vite, React Router, Axios (plain CSS, no UI framework)
-- **Deployment:** Render (backend) or Railway, Vercel/Netlify (frontend), Neon/Supabase (Postgres)
+-- **Backend:** Node.js (v18+), TypeScript 5.5, Express 4.19, Prisma ORM 5.20, PostgreSQL, JWT auth (jsonwebtoken 9.0), Zod 3.23 for validation
+- **Frontend:** React 18, TypeScript, Vite 5, React Router 6, Axios (plain CSS, no UI framework)
+- **Deployment (planned):** Render (backend), Vercel (frontend), Neon (PostgreSQL) — all free tier
 
 ## Architecture (short explanation)
 
